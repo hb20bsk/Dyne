@@ -1,11 +1,3 @@
---[[
-    Modern UI Library - Combined Test Script
-    Fixed: Dragging, Slider, Tabs expand, Dropdown styling
-]]
-
---============================================
--- LIBRARY START
---============================================
 
 local cloneref = cloneref or function(instance) return instance end
 
@@ -475,10 +467,11 @@ Create("UIListLayout", {
 })
 
 local WatermarkLabels = {}
-local watermarkItems = {"HOLEX", "Lobby", "144 FPS", "25ms", "12:18 PM"}
 local WatermarkAccentLabel = nil
+local MAX_WATERMARK_ITEMS = 10
 
-for i, text in ipairs(watermarkItems) do
+-- Create empty label slots (they start hidden)
+for i = 1, MAX_WATERMARK_ITEMS do
     local isAccent = (i == 1)
     local label = Create("TextLabel", {
         Name = "Item" .. i,
@@ -486,9 +479,10 @@ for i, text in ipairs(watermarkItems) do
         Size = UDim2.new(0, 0, 1, 0),
         AutomaticSize = Enum.AutomaticSize.X,
         Font = Enum.Font.GothamMedium,
-        Text = text,
+        Text = "",
         TextColor3 = isAccent and Theme.Accent or Theme.Text,
         TextSize = 12,
+        Visible = false,
         Parent = Watermark
     })
     if isAccent then
@@ -501,9 +495,12 @@ for i, text in ipairs(watermarkItems) do
 end
 
 function Library:SetWatermark(items)
-    for i, text in ipairs(items) do
-        if WatermarkLabels[i] then
-            WatermarkLabels[i].Text = text
+    for i, label in ipairs(WatermarkLabels) do
+        if items[i] then
+            label.Text = items[i]
+            label.Visible = true
+        else
+            label.Visible = false
         end
     end
 end
