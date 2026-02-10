@@ -105,6 +105,18 @@ local Theme = {
 local Toggles = {}
 local Options = {}
 
+-- Theme Element Tracking (for live theme updates)
+local ThemedElements = {}
+
+local function RegisterThemed(element, property, themeKey, modifier)
+    table.insert(ThemedElements, {
+        Element = element,
+        Property = property,
+        ThemeKey = themeKey,
+        Modifier = modifier -- optional function to modify the color
+    })
+end
+
 -- Utility Functions
 local function Create(class, properties)
     local instance = Instance.new(class)
@@ -189,7 +201,51 @@ local Library = {
     PickerActive = false,
     Toggles = Toggles,
     Options = Options,
+    _toggleElements = {},
+    _tabElements = {},
 }
+
+-- Update all themed elements when theme changes
+function Library:UpdateColors()
+    -- Update registered themed elements
+    for _, entry in ipairs(ThemedElements) do
+        local element = entry.Element
+        local property = entry.Property
+        local themeKey = entry.ThemeKey
+        
+        if element and element.Parent then
+            local color = self.Theme[themeKey]
+            if color then
+                if entry.Modifier then
+                    color = entry.Modifier(color)
+                end
+                pcall(function()
+                    element[property] = color
+                end)
+            end
+        end
+    end
+    
+    -- Update toggles
+    for _, toggle in ipairs(self._toggleElements) do
+        if toggle.checkbox and toggle.checkbox.Parent then
+            toggle.checkbox.BackgroundColor3 = toggle.getValue() and self.Theme.Accent or self.Theme.Tertiary
+        end
+        if toggle.label and toggle.label.Parent then
+            toggle.label.TextColor3 = toggle.getValue() and self.Theme.Text or self.Theme.TextDark
+        end
+    end
+    
+    -- Update tabs
+    for _, tab in ipairs(self._tabElements) do
+        if tab.iconHolder and tab.isSelected then
+            local icon = tab.iconHolder:FindFirstChildOfClass("ImageLabel")
+            if icon then
+                icon.ImageColor3 = tab.isSelected() and self.Theme.Accent or self.Theme.TextDark
+            end
+        end
+    end
+end
 
 --============================================
 -- NOTIFICATIONS
@@ -395,7 +451,9 @@ function Library:CreateWindow(options)
         Parent = ScreenGui
     })
     AddCorner(MainWindow, 12)
-    AddStroke(MainWindow, Theme.Border, 1)
+    local mainStroke = AddStroke(MainWindow, Theme.Border, 1)
+    RegisterThemed(MainWindow, "BackgroundColor3", "Background")
+    RegisterThemed(mainStroke, "Color", "Border")
     
     Library.MainWindow = MainWindow
     Library.Toggled = options.AutoShow ~= false
@@ -410,6 +468,7 @@ function Library:CreateWindow(options)
         Parent = MainWindow
     })
     AddCorner(TopBar, 12)
+    RegisterThemed(TopBar, "BackgroundColor3", "Secondary")
     
     Create("Frame", {
         BackgroundColor3 = Theme.Secondary,
@@ -741,7 +800,9 @@ function Library:CreateWindow(options)
                 Parent = parent
             })
             AddCorner(groupboxFrame, 8)
-            AddStroke(groupboxFrame, Theme.Border, 1)
+            local groupboxStroke = AddStroke(groupboxFrame, Theme.Border, 1)
+            RegisterThemed(groupboxFrame, "BackgroundColor3", "Secondary")
+            RegisterThemed(groupboxStroke, "Color", "Border")
             
             -- Title
             Create("TextLabel", {
@@ -1353,6 +1414,13 @@ function Library:CreateWindow(options)
                     end
                 end)
                 
+                -- Register for theme updates
+                table.insert(Library._toggleElements, {
+                    checkbox = checkbox,
+                    label = label,
+                    getValue = function() return Toggle.Value end
+                })
+                
                 Toggles[idx] = Toggle
                 return Toggle
             end
@@ -1421,6 +1489,7 @@ function Library:CreateWindow(options)
                     Parent = sliderBg
                 })
                 AddCorner(sliderFill, 3)
+                RegisterThemed(sliderFill, "BackgroundColor3", "Accent")
                 
                 -- Small white knob
                 local initialPercent = math.clamp((default - min) / (max - min), 0, 1)
@@ -1942,6 +2011,12 @@ function Library:CreateWindow(options)
         if #Window.Tabs == 0 then
             Window.ActiveTab = Tab
         end
+        
+        -- Register for theme updates
+        table.insert(Library._tabElements, {
+            iconHolder = Tab.IconHolder,
+            isSelected = function() return Window.ActiveTab == Tab end
+        })
         
         table.insert(Window.Tabs, Tab)
         return Tab
