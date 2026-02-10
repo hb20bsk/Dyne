@@ -41,17 +41,17 @@ end
 
 local ThemeManager = {} do
     local ThemeFields = { "Background", "Secondary", "Tertiary", "Accent", "Text", "TextDark", "Border" }
-    ThemeManager.Folder = "ModernUISettings"
+    ThemeManager.Folder = "DyneSettings"
     ThemeManager.Library = nil
     ThemeManager.BuiltInThemes = {
         ['Default'] = { 1, { 
-            Background = "111317", 
-            Secondary = "181b1f", 
-            Tertiary = "20242a", 
-            Accent = "aaeb5f", 
+            Background = "080808", 
+            Secondary = "0f0f0f", 
+            Tertiary = "161616", 
+            Accent = "78ff50", 
             Text = "ffffff", 
-            TextDark = "8c919b", 
-            Border = "2d323a" 
+            TextDark = "828282", 
+            Border = "232323" 
         }},
         ['Midnight'] = { 2, { 
             Background = "0d0d12", 
