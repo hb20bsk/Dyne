@@ -11,14 +11,20 @@ local cloneref = cloneref or function(instance) return instance end
 
 local CoreGui = cloneref(game:GetService("CoreGui"))
 
--- Destroy previous UI if re-executed
+-- Destroy previous UI if re-executed (check both CoreGui and gethui)
 local function destroyOldUI()
-    local guiParent = (gethui and gethui()) or CoreGui
-    for _, child in pairs(guiParent:GetChildren()) do
-        if child:IsA("ScreenGui") and child:GetAttribute("ModernUILib") then
-            child:Destroy()
+    local function scanAndDestroy(parent)
+        if not parent then return end
+        for _, child in pairs(parent:GetChildren()) do
+            if child:IsA("ScreenGui") then
+                if child:GetAttribute("ModernUILib") or child.Name:match("^Hbo%d+$") then
+                    pcall(function() child:Destroy() end)
+                end
+            end
         end
     end
+    scanAndDestroy(CoreGui)
+    if gethui then pcall(function() scanAndDestroy(gethui()) end) end
 end
 destroyOldUI()
 local TweenService = cloneref(game:GetService("TweenService"))
@@ -258,6 +264,15 @@ function Library:UpdateColors()
             if icon then
                 icon.ImageColor3 = tab.isSelected() and self.Theme.Accent or self.Theme.TextDark
             end
+        end
+        if tab.button and tab.button.Parent then
+            tab.button.BackgroundColor3 = self.Theme.Tertiary
+        end
+        if tab.buttonStroke and tab.buttonStroke.Parent then
+            tab.buttonStroke.Color = self.Theme.Border
+        end
+        if tab.textLabel and tab.textLabel.Parent then
+            tab.textLabel.TextColor3 = self.Theme.Text
         end
     end
     
@@ -549,7 +564,9 @@ function Library:CreateWindow(options)
         Parent = TopBar
     })
     AddCorner(LogoContainer, 6)
-    AddStroke(LogoContainer, Theme.Border, 1)
+    local logoStroke = AddStroke(LogoContainer, Theme.Border, 1)
+    RegisterThemed(LogoContainer, "BackgroundColor3", "Tertiary")
+    RegisterThemed(logoStroke, "Color", "Border")
     
     local logoIconHolder = Create("Frame", {
         BackgroundTransparency = 1,
@@ -714,7 +731,7 @@ function Library:CreateWindow(options)
             Parent = TabButtonContainer
         })
         AddCorner(tabBtn, 6)
-        AddStroke(tabBtn, Theme.Border, 1)
+        local tabBtnStroke = AddStroke(tabBtn, Theme.Border, 1)
         
         local iconHolder = Create("Frame", {
             BackgroundTransparency = 1,
@@ -741,6 +758,7 @@ function Library:CreateWindow(options)
         })
         
         Tab.Button = tabBtn
+        Tab.ButtonStroke = tabBtnStroke
         Tab.IconHolder = iconHolder
         Tab.TextLabel = tabTextLabel
         
@@ -1546,6 +1564,7 @@ function Library:CreateWindow(options)
                     Parent = sliderContainer
                 })
                 AddCorner(sliderBg, 3)
+                RegisterThemed(sliderBg, "BackgroundColor3", "Tertiary")
                 
                 local sliderFill = Create("Frame", {
                     BackgroundColor3 = Theme.Accent,
@@ -2115,6 +2134,9 @@ function Library:CreateWindow(options)
         -- Register for theme updates
         table.insert(Library._tabElements, {
             iconHolder = Tab.IconHolder,
+            button = Tab.Button,
+            buttonStroke = Tab.ButtonStroke,
+            textLabel = Tab.TextLabel,
             isSelected = function() return Window.ActiveTab == Tab end
         })
         
