@@ -1,4 +1,11 @@
+--[[
+    Modern UI Library - Combined Test Script
+    Fixed: Dragging, Slider, Tabs expand, Dropdown styling
+]]
 
+--============================================
+-- LIBRARY START
+--============================================
 
 local cloneref = cloneref or function(instance) return instance end
 
@@ -987,13 +994,13 @@ function Library:CreateWindow(options)
                     
                     -- Create key picker button (right side)
                     local keyBtn = Create("TextButton", {
-                        BackgroundColor3 = Theme.Accent,
+                        BackgroundColor3 = Theme.Tertiary,
                         AnchorPoint = Vector2.new(1, 0.5),
                         Position = UDim2.new(1, 0, 0.5, 0),
                         Size = UDim2.new(0, 55, 0, 20),
                         Font = Enum.Font.GothamMedium,
                         Text = getDisplayText(kpDefault),
-                        TextColor3 = Theme.Background,
+                        TextColor3 = Theme.TextDark,
                         TextSize = 11,
                         AutoButtonColor = false,
                         BorderSizePixel = 0,
@@ -1001,14 +1008,14 @@ function Library:CreateWindow(options)
                         Parent = labelContainer
                     })
                     AddCorner(keyBtn, 4)
-                    RegisterThemed(keyBtn, "BackgroundColor3", "Accent")
+                    RegisterThemed(keyBtn, "BackgroundColor3", "Tertiary")
                     
                     local listening = false
                     
                     keyBtn.MouseButton1Click:Connect(function()
                         listening = true
                         keyBtn.Text = "[...]"
-                        Tween(keyBtn, {BackgroundColor3 = Theme.Text}, 0.15)
+                        Tween(keyBtn, {BackgroundColor3 = Theme.Accent, TextColor3 = Theme.Background}, 0.15)
                     end)
                     
                     UserInputService.InputBegan:Connect(function(input, processed)
@@ -1024,7 +1031,7 @@ function Library:CreateWindow(options)
                                 KeyPicker.Value = input.KeyCode.Name
                                 keyBtn.Text = "[" .. getKeyName(input.KeyCode) .. "]"
                             end
-                            Tween(keyBtn, {BackgroundColor3 = Theme.Accent}, 0.15)
+                            Tween(keyBtn, {BackgroundColor3 = Theme.Tertiary, TextColor3 = Theme.TextDark}, 0.15)
                             task.spawn(kpChangedCallback, KeyPicker.Value)
                             return
                         end
@@ -1499,25 +1506,25 @@ function Library:CreateWindow(options)
                     
                     -- Key display box
                     local keyDisplay = Create("Frame", {
-                        BackgroundColor3 = Theme.Accent,
+                        BackgroundColor3 = Theme.Tertiary,
                         Size = UDim2.new(0, 32, 0, 26),
                         LayoutOrder = 0,
                         BorderSizePixel = 0,
                         Parent = addonsFrame
                     })
                     AddCorner(keyDisplay, 4)
-                    RegisterThemed(keyDisplay, "BackgroundColor3", "Accent")
+                    RegisterThemed(keyDisplay, "BackgroundColor3", "Tertiary")
                     
                     local keyLabel = Create("TextLabel", {
                         BackgroundTransparency = 1,
                         Size = UDim2.new(1, 0, 1, 0),
                         Font = Enum.Font.GothamMedium,
                         Text = kpDefault ~= "None" and kpDefault or "...",
-                        TextColor3 = Theme.Background,
+                        TextColor3 = Theme.TextDark,
                         TextSize = 11,
                         Parent = keyDisplay
                     })
-                    RegisterThemed(keyLabel, "TextColor3", "Background")
+                    RegisterThemed(keyLabel, "TextColor3", "TextDark")
                     
                     local function getKeyName(keyCode)
                         if not keyCode then return "..." end
@@ -1570,7 +1577,7 @@ function Library:CreateWindow(options)
                         if input.UserInputType == Enum.UserInputType.MouseButton1 then
                             KeyPicker.Picking = true
                             keyLabel.Text = "..."
-                            Tween(keyDisplay, {BackgroundColor3 = Theme.Text}, 0.15)
+                            Tween(keyDisplay, {BackgroundColor3 = Theme.Accent}, 0.15)
                             Tween(keyLabel, {TextColor3 = Theme.Background}, 0.15)
                         end
                     end)
@@ -1588,8 +1595,8 @@ function Library:CreateWindow(options)
                                     KeyPicker:SetValue(input.KeyCode)
                                 end
                                 KeyPicker.Picking = false
-                                Tween(keyDisplay, {BackgroundColor3 = Theme.Accent}, 0.15)
-                                Tween(keyLabel, {TextColor3 = Theme.Background}, 0.15)
+                                Tween(keyDisplay, {BackgroundColor3 = Theme.Tertiary}, 0.15)
+                                Tween(keyLabel, {TextColor3 = Theme.TextDark}, 0.15)
                                 if KeyPicker.Changed then KeyPicker.Changed(KeyPicker.Value) end
                             elseif input.UserInputType == Enum.UserInputType.MouseButton1 or 
                                    input.UserInputType == Enum.UserInputType.MouseButton2 then
@@ -2159,10 +2166,17 @@ function Library:CreateWindow(options)
                 return Dropdown
             end
             
-            function Groupbox:AddButton(buttonOptions)
-                buttonOptions = buttonOptions or {}
-                local text = buttonOptions.Text or "Button"
-                local callback = buttonOptions.Func or buttonOptions.Callback or function() end
+            function Groupbox:AddButton(buttonOptions, callbackArg)
+                -- Support both syntaxes: AddButton("text", func) and AddButton({Text = "text", Func = func})
+                local text, callback
+                if type(buttonOptions) == "string" then
+                    text = buttonOptions
+                    callback = callbackArg or function() end
+                else
+                    buttonOptions = buttonOptions or {}
+                    text = buttonOptions.Text or "Button"
+                    callback = buttonOptions.Func or buttonOptions.Callback or function() end
+                end
                 
                 local btn = Create("TextButton", {
                     BackgroundColor3 = Theme.Tertiary,
@@ -2435,7 +2449,18 @@ function Library:CreateWindow(options)
     return Window
 end
 
+function Library:Unload()
+    -- Clean up
+    Library.Unloaded = true
+    if ScreenGui then
+        ScreenGui:Destroy()
+    end
+end
 
+function Library:OnUnload(callback)
+    -- Store callback for unload event
+    Library.UnloadCallback = callback
+end
 
 return Library
 
