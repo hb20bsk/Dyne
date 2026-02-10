@@ -361,7 +361,7 @@ local ThemeManager = {} do
                     Duration = 3,
                     Type = "success"
                 })
-                self.Library.Options.ThemeManager_CustomThemeList:SetValues(self:ReloadCustomThemes())
+                task.wait(0.1); self.Library.Options.ThemeManager_CustomThemeList:SetValues(self:ReloadCustomThemes())
                 self.Library.Options.ThemeManager_CustomThemeList:SetValue(nil)
             end
         })
@@ -420,7 +420,7 @@ local ThemeManager = {} do
                     Duration = 3,
                     Type = "success"
                 })
-                self.Library.Options.ThemeManager_CustomThemeList:SetValues(self:ReloadCustomThemes())
+                task.wait(0.1); self.Library.Options.ThemeManager_CustomThemeList:SetValues(self:ReloadCustomThemes())
                 self.Library.Options.ThemeManager_CustomThemeList:SetValue(nil)
             end
         })
@@ -428,7 +428,7 @@ local ThemeManager = {} do
         groupbox:AddButton({
             Text = 'Refresh list',
             Func = function()
-                self.Library.Options.ThemeManager_CustomThemeList:SetValues(self:ReloadCustomThemes())
+                task.wait(0.1); self.Library.Options.ThemeManager_CustomThemeList:SetValues(self:ReloadCustomThemes())
                 self.Library.Options.ThemeManager_CustomThemeList:SetValue(nil)
             end
         })
@@ -453,7 +453,7 @@ local ThemeManager = {} do
                     Duration = 3,
                     Type = "success"
                 })
-                self.Library.Options.ThemeManager_CustomThemeList:SetValues(self:ReloadCustomThemes())
+                task.wait(0.1); self.Library.Options.ThemeManager_CustomThemeList:SetValues(self:ReloadCustomThemes())
                 self.Library.Options.ThemeManager_CustomThemeList:SetValue(nil)
             end
         })
@@ -490,3 +490,4 @@ local ThemeManager = {} do
 end
 
 return ThemeManager
+
