@@ -462,6 +462,7 @@ local SaveManager = {} do
                     Type = "success"
                 })
 
+                task.wait(0.1) -- Wait for file system to update
                 self.Library.Options.SaveManager_ConfigList:SetValues(self:RefreshConfigList())
                 self.Library.Options.SaveManager_ConfigList:SetValue(nil)
             end
@@ -545,6 +546,7 @@ local SaveManager = {} do
                     Duration = 3,
                     Type = "success"
                 })
+                task.wait(0.1) -- Wait for file system to update
                 self.Library.Options.SaveManager_ConfigList:SetValues(self:RefreshConfigList())
                 self.Library.Options.SaveManager_ConfigList:SetValue(nil)
             end
@@ -553,6 +555,7 @@ local SaveManager = {} do
         section:AddButton({
             Text = 'Refresh list',
             Func = function()
+                task.wait(0.05) -- Small delay for file system
                 self.Library.Options.SaveManager_ConfigList:SetValues(self:RefreshConfigList())
                 self.Library.Options.SaveManager_ConfigList:SetValue(nil)
             end
