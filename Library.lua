@@ -1,11 +1,4 @@
---[[
-    Modern UI Library - Combined Test Script
-    Fixed: Dragging, Slider, Tabs expand, Dropdown styling
-]]
 
---============================================
--- LIBRARY START
---============================================
 
 local cloneref = cloneref or function(instance) return instance end
 
@@ -884,9 +877,7 @@ function Library:CreateWindow(options)
                 Parent = parent
             })
             AddCorner(groupboxFrame, 8)
-            local groupboxStroke = AddStroke(groupboxFrame, Theme.Border, 1)
             RegisterThemed(groupboxFrame, "BackgroundColor3", "Secondary")
-            RegisterThemed(groupboxStroke, "Color", "Border")
             
             -- Title
             Create("TextLabel", {
