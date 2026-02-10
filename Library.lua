@@ -449,15 +449,16 @@ end
 
 local Watermark = Create("Frame", {
     Name = "Watermark",
-    BackgroundColor3 = Theme.Tertiary,
+    BackgroundColor3 = Theme.Background,
     AnchorPoint = Vector2.new(1, 0),
     Position = UDim2.new(1, -20, 0, 20),
     Size = UDim2.new(0, 0, 0, 38),
     AutomaticSize = Enum.AutomaticSize.X,
+    BorderSizePixel = 0,
     Parent = ScreenGui
 })
 AddCorner(Watermark, 6)
-AddStroke(Watermark, Theme.Border, 1)
+RegisterThemed(Watermark, "BackgroundColor3", "Background")
 
 Create("UIPadding", {
     PaddingLeft = UDim.new(0, 10),
@@ -475,8 +476,10 @@ Create("UIListLayout", {
 
 local WatermarkLabels = {}
 local watermarkItems = {"HOLEX", "Lobby", "144 FPS", "25ms", "12:18 PM"}
+local WatermarkAccentLabel = nil
 
 for i, text in ipairs(watermarkItems) do
+    local isAccent = (i == 1)
     local label = Create("TextLabel", {
         Name = "Item" .. i,
         BackgroundTransparency = 1,
@@ -484,10 +487,16 @@ for i, text in ipairs(watermarkItems) do
         AutomaticSize = Enum.AutomaticSize.X,
         Font = Enum.Font.GothamMedium,
         Text = text,
-        TextColor3 = i == 1 and Theme.Accent or Theme.Text,
+        TextColor3 = isAccent and Theme.Accent or Theme.Text,
         TextSize = 12,
         Parent = Watermark
     })
+    if isAccent then
+        WatermarkAccentLabel = label
+        RegisterThemed(label, "TextColor3", "Accent")
+    else
+        RegisterThemed(label, "TextColor3", "Text")
+    end
     WatermarkLabels[i] = label
 end
 
@@ -497,6 +506,10 @@ function Library:SetWatermark(items)
             WatermarkLabels[i].Text = text
         end
     end
+end
+
+function Library:SetWatermarkVisibility(visible)
+    Watermark.Visible = visible
 end
 
 Library.Watermark = Watermark
