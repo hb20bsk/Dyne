@@ -511,6 +511,7 @@ function Library:CreateWindow(options)
         ZIndex = 4,
         Parent = logoIconHolder
     })
+    RegisterThemed(logoImage, "ImageColor3", "Accent")
     
     -- Dedicated drag area (between logo and tabs, and after tabs)
     local DragArea = Create("Frame", {
@@ -711,6 +712,7 @@ function Library:CreateWindow(options)
             BorderSizePixel = 0,
             Parent = contentArea
         })
+        RegisterThemed(leftColumn, "ScrollBarImageColor3", "Accent")
         
         Create("UIListLayout", {
             Padding = UDim.new(0, 14),
@@ -735,6 +737,7 @@ function Library:CreateWindow(options)
             BorderSizePixel = 0,
             Parent = contentArea
         })
+        RegisterThemed(rightColumn, "ScrollBarImageColor3", "Accent")
         
         Create("UIListLayout", {
             Padding = UDim.new(0, 14),
@@ -1695,6 +1698,7 @@ function Library:CreateWindow(options)
                     BorderSizePixel = 0,
                     Parent = dropdownContainer
                 })
+                RegisterThemed(optionsScroll, "ScrollBarImageColor3", "Accent")
                 
                 Create("UIListLayout", {
                     Padding = UDim.new(0, 2),
