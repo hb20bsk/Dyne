@@ -1,4 +1,11 @@
+--[[
+    Modern UI Library - Combined Test Script
+    Fixed: Dragging, Slider, Tabs expand, Dropdown styling
+]]
 
+--============================================
+-- LIBRARY START
+--============================================
 
 local cloneref = cloneref or function(instance) return instance end
 
@@ -13,6 +20,32 @@ local HttpService = cloneref(game:GetService("HttpService"))
 local LocalPlayer = Players.LocalPlayer
 local Mouse = LocalPlayer:GetMouse()
 
+-- Fallback icons in case HTTP fails
+local FallbackIcons = {
+    ["home"] = "rbxassetid://10723407389",
+    ["user"] = "rbxassetid://10747373176",
+    ["eye"] = "rbxassetid://10723346959",
+    ["settings"] = "rbxassetid://10734950309",
+    ["bell"] = "rbxassetid://10709775704",
+    ["check"] = "rbxassetid://10709790644",
+    ["x"] = "rbxassetid://10747384394",
+    ["info"] = "rbxassetid://10723415903",
+    ["alert-circle"] = "rbxassetid://10709752996",
+    ["alert-triangle"] = "rbxassetid://10709753149",
+    ["search"] = "rbxassetid://10734943674",
+    ["chevron-down"] = "rbxassetid://10709790948",
+    ["chevron-up"] = "rbxassetid://10709791523",
+    ["folder"] = "rbxassetid://10723387563",
+    ["star"] = "rbxassetid://10734966248",
+    ["heart"] = "rbxassetid://10723406885",
+    ["shield"] = "rbxassetid://10734951847",
+    ["zap"] = "rbxassetid://10747385618",
+    ["target"] = "rbxassetid://10734977012",
+    ["globe"] = "rbxassetid://10723404337",
+    ["swords"] = "rbxassetid://10734975692",
+    ["crosshair"] = "rbxassetid://10709818534",
+}
+
 -- Load Lucide Icons from dawid's GitHub repository
 local Icons = {}
 local success, iconsModule = pcall(function()
@@ -21,6 +54,9 @@ end)
 
 if success and iconsModule and iconsModule.assets then
     Icons = iconsModule.assets
+else
+    -- Use fallback icons if HTTP fails
+    Icons = FallbackIcons
 end
 
 local function GetIcon(name)
@@ -32,6 +68,9 @@ local function GetIcon(name)
     -- Try without lucide- prefix
     local withoutPrefix = name:gsub("^lucide%-", "")
     if Icons[withoutPrefix] then return Icons[withoutPrefix] end
+    -- Try fallback icons
+    if FallbackIcons[name] then return FallbackIcons[name] end
+    if FallbackIcons[withoutPrefix] then return FallbackIcons[withoutPrefix] end
     return nil
 end
 
