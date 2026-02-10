@@ -1,4 +1,11 @@
+--[[
+    Modern UI Library - Combined Test Script
+    Fixed: Dragging, Slider, Tabs expand, Dropdown styling
+]]
 
+--============================================
+-- LIBRARY START
+--============================================
 
 local cloneref = cloneref or function(instance) return instance end
 
@@ -149,6 +156,7 @@ local function AddStroke(parent, color, thickness)
         Color = color or Theme.Border,
         Thickness = thickness or 1,
         ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
+        LineJoinMode = Enum.LineJoinMode.Round,
         Parent = parent
     })
 end
@@ -918,18 +926,25 @@ function Library:CreateWindow(options)
             Groupbox.Container = container
             
             function Groupbox:AddLabel(text)
+                local labelContainer = Create("Frame", {
+                    BackgroundTransparency = 1,
+                    Size = UDim2.new(1, 0, 0, 22),
+                    ClipsDescendants = false,
+                    Parent = container
+                })
+                
                 local label = Create("TextLabel", {
                     BackgroundTransparency = 1,
-                    Size = UDim2.new(1, 0, 0, 20),
+                    Size = UDim2.new(1, -60, 1, 0),
                     Font = Enum.Font.Gotham,
                     Text = text,
                     TextColor3 = Theme.TextDark,
                     TextSize = 12,
                     TextXAlignment = Enum.TextXAlignment.Left,
-                    Parent = container
+                    Parent = labelContainer
                 })
                 
-                local LabelObj = { Instance = label, Type = "Label" }
+                local LabelObj = { Instance = label, Container = labelContainer, Type = "Label" }
                 function LabelObj:SetText(newText) label.Text = newText end
                 
                 -- AddKeyPicker for Labels (Linoria-style)
@@ -968,19 +983,25 @@ function Library:CreateWindow(options)
                         return name
                     end
                     
-                    -- Create key picker button (right side of label)
+                    local function getDisplayText(keyName)
+                        if keyName == "None" then return "[None]" end
+                        local kc = getKeyCode(keyName)
+                        return kc and ("[" .. getKeyName(kc) .. "]") or "[None]"
+                    end
+                    
+                    -- Create key picker button (right side)
                     local keyBtn = Create("TextButton", {
                         BackgroundColor3 = Theme.Tertiary,
                         AnchorPoint = Vector2.new(1, 0.5),
                         Position = UDim2.new(1, 0, 0.5, 0),
-                        Size = UDim2.new(0, 50, 0, 18),
+                        Size = UDim2.new(0, 55, 0, 20),
                         Font = Enum.Font.GothamMedium,
-                        Text = kpDefault == "None" and "[None]" or "[" .. getKeyName(getKeyCode(kpDefault)) .. "]",
+                        Text = getDisplayText(kpDefault),
                         TextColor3 = Theme.TextDark,
                         TextSize = 11,
                         AutoButtonColor = false,
                         Visible = not kpNoUI,
-                        Parent = label
+                        Parent = labelContainer
                     })
                     AddCorner(keyBtn, 4)
                     
@@ -1047,7 +1068,7 @@ function Library:CreateWindow(options)
                         else
                             KeyPicker.Value = data or "None"
                         end
-                        keyBtn.Text = KeyPicker.Value == "None" and "[None]" or "[" .. getKeyName(getKeyCode(KeyPicker.Value)) .. "]"
+                        keyBtn.Text = getDisplayText(KeyPicker.Value)
                     end
                     
                     function KeyPicker:OnClick(cb) kpCallback = cb end
