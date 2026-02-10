@@ -10,6 +10,10 @@
 local cloneref = cloneref or function(instance) return instance end
 
 local CoreGui = cloneref(game:GetService("CoreGui"))
+
+-- Destroy previous UI if re-executed
+local oldUI = CoreGui:FindFirstChild("ModernUI")
+if oldUI then oldUI:Destroy() end
 local TweenService = cloneref(game:GetService("TweenService"))
 local Players = cloneref(game:GetService("Players"))
 local RunService = cloneref(game:GetService("RunService"))
@@ -1734,7 +1738,9 @@ function Library:CreateWindow(options)
                 
                 local function toggleDropdown()
                     isOpen = not isOpen
-                    local expandedHeight = 44 + searchHeight + 8 + listHeight + 6
+                    local currentVisibleCount = math.min(#values, maxVisible)
+                    local currentListHeight = currentVisibleCount * itemHeight + (currentVisibleCount - 1) * 2
+                    local expandedHeight = 44 + searchHeight + 8 + currentListHeight + 6
                     local targetSize = isOpen and UDim2.new(1, 0, 0, expandedHeight) or UDim2.new(1, 0, 0, 38)
                     Tween(dropdownContainer, {Size = targetSize}, 0.2)
                     Tween(arrow, {Rotation = isOpen and 180 or 0}, 0.2)
@@ -1829,58 +1835,83 @@ function Library:CreateWindow(options)
                 function Dropdown:SetValue(value)
                     Dropdown.Value = value
                     updateDisplay()
+                    task.spawn(callback, Dropdown.Value)
+                    if Dropdown.Changed then Dropdown.Changed(Dropdown.Value) end
                 end
                 
                 function Dropdown:SetValues(newValues)
                     -- Clear existing options
-                    for _, child in pairs(optionsFrame:GetChildren()) do
+                    for _, child in pairs(optionsScroll:GetChildren()) do
                         if child:IsA("TextButton") then
                             child:Destroy()
                         end
                     end
+                    -- Clear option buttons tracking
+                    table.clear(optionButtons)
                     -- Update values and recreate options
                     values = newValues
+                    -- Update canvas and scroll size
+                    local newVisibleCount = math.min(#values, maxVisible)
+                    local newListHeight = newVisibleCount * itemHeight + (newVisibleCount - 1) * 2
+                    optionsScroll.CanvasSize = UDim2.new(0, 0, 0, #values * (itemHeight + 2))
+                    optionsScroll.Size = UDim2.new(1, -12, 0, newListHeight)
+                    
                     for i, val in ipairs(values) do
+                        local isSelected = multi and Dropdown.Value[val]
+                        
                         local optBtn = Create("TextButton", {
-                            BackgroundColor3 = Theme.Tertiary,
-                            Size = UDim2.new(1, 0, 0, 32),
+                            BackgroundColor3 = Theme.Secondary,
+                            BackgroundTransparency = 0.3,
+                            Size = UDim2.new(1, 0, 0, itemHeight),
                             Font = Enum.Font.Gotham,
                             Text = "",
-                            TextTransparency = 1,
                             AutoButtonColor = false,
-                            LayoutOrder = i,
-                            Parent = optionsFrame
+                            Parent = optionsScroll
                         })
                         AddCorner(optBtn, 4)
                         
-                        local optLabel = Create("TextLabel", {
+                        local checkmark = nil
+                        if multi then
+                            checkmark = Create("TextLabel", {
+                                BackgroundTransparency = 1,
+                                Position = UDim2.new(0, 8, 0, 0),
+                                Size = UDim2.new(0, 20, 1, 0),
+                                Font = Enum.Font.GothamBold,
+                                Text = isSelected and "✓" or "",
+                                TextColor3 = Theme.Accent,
+                                TextSize = 14,
+                                Parent = optBtn
+                            })
+                        end
+                        
+                        Create("TextLabel", {
                             BackgroundTransparency = 1,
-                            Position = UDim2.new(0, 10, 0, 0),
-                            Size = UDim2.new(1, -40, 1, 0),
+                            Position = UDim2.new(0, multi and 28 or 12, 0, 0),
+                            Size = UDim2.new(1, multi and -36 or -24, 1, 0),
                             Font = Enum.Font.Gotham,
                             Text = val,
                             TextColor3 = Theme.Text,
-                            TextSize = 13,
+                            TextSize = 12,
                             TextXAlignment = Enum.TextXAlignment.Left,
                             Parent = optBtn
                         })
                         
+                        table.insert(optionButtons, {Button = optBtn, ValueName = val, Checkmark = checkmark})
+                        
+                        optBtn.MouseEnter:Connect(function()
+                            Tween(optBtn, {BackgroundTransparency = 0}, 0.1)
+                        end)
+                        
+                        optBtn.MouseLeave:Connect(function()
+                            Tween(optBtn, {BackgroundTransparency = 0.3}, 0.1)
+                        end)
+                        
                         if multi then
-                            local checkmark = Create("ImageLabel", {
-                                BackgroundTransparency = 1,
-                                AnchorPoint = Vector2.new(1, 0.5),
-                                Position = UDim2.new(1, -10, 0.5, 0),
-                                Size = UDim2.new(0, 14, 0, 14),
-                                Image = GetIcon("check") or "rbxassetid://10709790644",
-                                ImageColor3 = Theme.Accent,
-                                ImageTransparency = Dropdown.Value[val] and 0 or 1,
-                                ScaleType = Enum.ScaleType.Fit,
-                                Parent = optBtn
-                            })
-                            
                             optBtn.MouseButton1Click:Connect(function()
                                 Dropdown.Value[val] = not Dropdown.Value[val]
-                                Tween(checkmark, {ImageTransparency = Dropdown.Value[val] and 0 or 1}, 0.15)
+                                if checkmark then
+                                    checkmark.Text = Dropdown.Value[val] and "✓" or ""
+                                end
                                 updateDisplay()
                                 task.spawn(callback, Dropdown.Value)
                             end)
@@ -1892,13 +1923,6 @@ function Library:CreateWindow(options)
                                 task.spawn(callback, Dropdown.Value)
                             end)
                         end
-                        
-                        optBtn.MouseEnter:Connect(function()
-                            Tween(optBtn, {BackgroundColor3 = Theme.Secondary}, 0.1)
-                        end)
-                        optBtn.MouseLeave:Connect(function()
-                            Tween(optBtn, {BackgroundColor3 = Theme.Tertiary}, 0.1)
-                        end)
                     end
                 end
                 
