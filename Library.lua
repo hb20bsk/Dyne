@@ -857,20 +857,22 @@ function Library:CreateWindow(options)
                 })
                 AddCorner(checkbox, 6)
                 
-                local checkmark = Create("TextLabel", {
+                local checkmark = Create("ImageLabel", {
                     BackgroundTransparency = 1,
-                    Size = UDim2.new(1, 0, 1, 0),
-                    Font = Enum.Font.GothamBold,
-                    Text = default and "âœ“" or "",
-                    TextColor3 = Theme.Background,
-                    TextSize = 16,
+                    AnchorPoint = Vector2.new(0.5, 0.5),
+                    Position = UDim2.new(0.5, 0, 0.5, 0),
+                    Size = UDim2.new(0, 16, 0, 16),
+                    Image = GetIcon("check") or "rbxassetid://10709790644",
+                    ImageColor3 = Theme.Background,
+                    ImageTransparency = default and 0 or 1,
+                    ScaleType = Enum.ScaleType.Fit,
                     Parent = checkbox
                 })
                 
                 function Toggle:SetValue(value)
                     Toggle.Value = value
                     Tween(checkbox, {BackgroundColor3 = value and Theme.Accent or Theme.Tertiary}, 0.15)
-                    checkmark.Text = value and "âœ“" or ""
+                    Tween(checkmark, {ImageTransparency = value and 0 or 1}, 0.15)
                     label.TextColor3 = value and Theme.Text or Theme.TextDark
                     task.spawn(callback, value)
                 end
@@ -1572,15 +1574,14 @@ function Library:CreateWindow(options)
                     Parent = dropdownContainer
                 })
                 
-                local arrow = Create("TextLabel", {
+                local arrow = Create("ImageLabel", {
                     BackgroundTransparency = 1,
                     AnchorPoint = Vector2.new(1, 0.5),
                     Position = UDim2.new(1, -12, 0, 19),
-                    Size = UDim2.new(0, 20, 0, 20),
-                    Font = Enum.Font.GothamBold,
-                    Text = "â–¼",
-                    TextColor3 = Theme.TextDark,
-                    TextSize = 18,
+                    Size = UDim2.new(0, 16, 0, 16),
+                    Image = GetIcon("chevron-down") or "rbxassetid://10709790948",
+                    ImageColor3 = Theme.TextDark,
+                    ScaleType = Enum.ScaleType.Fit,
                     Parent = dropdownContainer
                 })
                 
@@ -1792,21 +1793,21 @@ function Library:CreateWindow(options)
                         })
                         
                         if multi then
-                            local checkmark = Create("TextLabel", {
+                            local checkmark = Create("ImageLabel", {
                                 BackgroundTransparency = 1,
                                 AnchorPoint = Vector2.new(1, 0.5),
                                 Position = UDim2.new(1, -10, 0.5, 0),
-                                Size = UDim2.new(0, 20, 0, 20),
-                                Font = Enum.Font.GothamBold,
-                                Text = Dropdown.Value[val] and "âœ“" or "",
-                                TextColor3 = Theme.Accent,
-                                TextSize = 14,
+                                Size = UDim2.new(0, 14, 0, 14),
+                                Image = GetIcon("check") or "rbxassetid://10709790644",
+                                ImageColor3 = Theme.Accent,
+                                ImageTransparency = Dropdown.Value[val] and 0 or 1,
+                                ScaleType = Enum.ScaleType.Fit,
                                 Parent = optBtn
                             })
                             
                             optBtn.MouseButton1Click:Connect(function()
                                 Dropdown.Value[val] = not Dropdown.Value[val]
-                                checkmark.Text = Dropdown.Value[val] and "âœ“" or ""
+                                Tween(checkmark, {ImageTransparency = Dropdown.Value[val] and 0 or 1}, 0.15)
                                 updateDisplay()
                                 task.spawn(callback, Dropdown.Value)
                             end)
@@ -1965,3 +1966,6 @@ end
 
 
 return Library
+
+
+
