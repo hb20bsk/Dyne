@@ -16,7 +16,7 @@ local Mouse = LocalPlayer:GetMouse()
 -- Load Lucide Icons from dawid's GitHub repository
 local Icons = {}
 local success, iconsModule = pcall(function()
-    return loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/UI-Libs/main/Icons.lua"))()
+    return loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/src/Icons.lua"))()
 end)
 
 if success and iconsModule and iconsModule.assets then
