@@ -12,8 +12,15 @@ local cloneref = cloneref or function(instance) return instance end
 local CoreGui = cloneref(game:GetService("CoreGui"))
 
 -- Destroy previous UI if re-executed
-local oldUI = CoreGui:FindFirstChild("ModernUI")
-if oldUI then oldUI:Destroy() end
+local function destroyOldUI()
+    local guiParent = (gethui and gethui()) or CoreGui
+    for _, child in pairs(guiParent:GetChildren()) do
+        if child:IsA("ScreenGui") and child:GetAttribute("ModernUILib") then
+            child:Destroy()
+        end
+    end
+end
+destroyOldUI()
 local TweenService = cloneref(game:GetService("TweenService"))
 local Players = cloneref(game:GetService("Players"))
 local RunService = cloneref(game:GetService("RunService"))
@@ -89,6 +96,7 @@ pcall(function()
     if syn and syn.protect_gui then syn.protect_gui(ScreenGui) end
 end)
 
+ScreenGui:SetAttribute("ModernUILib", true)
 ScreenGui.Parent = (gethui and gethui()) or CoreGui
 
 -- Theme Colors
@@ -207,6 +215,9 @@ local Library = {
     Options = Options,
     _toggleElements = {},
     _tabElements = {},
+    _buttonElements = {},
+    _inputElements = {},
+    _dropdownElements = {},
 }
 
 -- Update all themed elements when theme changes
@@ -247,6 +258,50 @@ function Library:UpdateColors()
             if icon then
                 icon.ImageColor3 = tab.isSelected() and self.Theme.Accent or self.Theme.TextDark
             end
+        end
+    end
+    
+    -- Update buttons
+    for _, btn in ipairs(self._buttonElements) do
+        if btn.button and btn.button.Parent then
+            btn.button.BackgroundColor3 = self.Theme.Tertiary
+            btn.button.TextColor3 = self.Theme.Text
+            local stroke = btn.button:FindFirstChildOfClass("UIStroke")
+            if stroke then stroke.Color = self.Theme.Border end
+        end
+    end
+    
+    -- Update inputs
+    for _, inp in ipairs(self._inputElements) do
+        if inp.container and inp.container.Parent then
+            inp.container.BackgroundColor3 = self.Theme.Tertiary
+            local stroke = inp.container:FindFirstChildOfClass("UIStroke")
+            if stroke then stroke.Color = self.Theme.Border end
+        end
+        if inp.textbox and inp.textbox.Parent then
+            inp.textbox.TextColor3 = self.Theme.Text
+            inp.textbox.PlaceholderColor3 = self.Theme.TextDark
+        end
+        if inp.label and inp.label.Parent then
+            inp.label.TextColor3 = self.Theme.TextDark
+        end
+    end
+    
+    -- Update dropdowns
+    for _, dd in ipairs(self._dropdownElements) do
+        if dd.container and dd.container.Parent then
+            dd.container.BackgroundColor3 = self.Theme.Tertiary
+            local stroke = dd.container:FindFirstChildOfClass("UIStroke")
+            if stroke then stroke.Color = self.Theme.Border end
+        end
+        if dd.displayLabel and dd.displayLabel.Parent then
+            dd.displayLabel.TextColor3 = self.Theme.Text
+        end
+        if dd.titleLabel and dd.titleLabel.Parent then
+            dd.titleLabel.TextColor3 = self.Theme.TextDark
+        end
+        if dd.arrow and dd.arrow.Parent then
+            dd.arrow.ImageColor3 = self.Theme.TextDark
         end
     end
 end
@@ -474,13 +529,15 @@ function Library:CreateWindow(options)
     AddCorner(TopBar, 12)
     RegisterThemed(TopBar, "BackgroundColor3", "Secondary")
     
-    Create("Frame", {
+    -- Bottom fill to hide rounded corners at bottom of TopBar
+    local topBarFill = Create("Frame", {
         BackgroundColor3 = Theme.Secondary,
         Position = UDim2.new(0, 0, 1, -14),
         Size = UDim2.new(1, 0, 0, 14),
         BorderSizePixel = 0,
         Parent = TopBar
     })
+    RegisterThemed(topBarFill, "BackgroundColor3", "Secondary")
     
     -- Logo with planet icon (right side)
     local LogoContainer = Create("Frame", {
@@ -1608,7 +1665,7 @@ function Library:CreateWindow(options)
                 local searchHeight = allowSearch and 34 or 0
                 
                 -- Label above dropdown
-                Create("TextLabel", {
+                local titleLabel = Create("TextLabel", {
                     BackgroundTransparency = 1,
                     Size = UDim2.new(1, 0, 0, 18),
                     Font = Enum.Font.Gotham,
@@ -1637,7 +1694,7 @@ function Library:CreateWindow(options)
                     displayText = #selected > 0 and table.concat(selected, ", ") or "Select..."
                 end
                 
-                local label = Create("TextLabel", {
+                local displayLabel = Create("TextLabel", {
                     BackgroundTransparency = 1,
                     Position = UDim2.new(0, 14, 0, 0),
                     Size = UDim2.new(1, -45, 0, 38),
@@ -1659,6 +1716,13 @@ function Library:CreateWindow(options)
                     ImageColor3 = Theme.TextDark,
                     ScaleType = Enum.ScaleType.Fit,
                     Parent = dropdownContainer
+                })
+                
+                table.insert(Library._dropdownElements, {
+                    container = dropdownContainer,
+                    displayLabel = displayLabel,
+                    titleLabel = titleLabel,
+                    arrow = arrow
                 })
                 
                 -- Search box (if enabled)
@@ -1718,9 +1782,9 @@ function Library:CreateWindow(options)
                         for v, enabled in pairs(Dropdown.Value) do
                             if enabled then table.insert(selected, v) end
                         end
-                        label.Text = #selected > 0 and table.concat(selected, ", ") or "Select..."
+                        displayLabel.Text = #selected > 0 and table.concat(selected, ", ") or "Select..."
                     else
-                        label.Text = Dropdown.Value or "Select..."
+                        displayLabel.Text = Dropdown.Value or "Select..."
                     end
                 end
                 
@@ -1962,6 +2026,8 @@ function Library:CreateWindow(options)
                     task.spawn(callback)
                 end)
                 
+                table.insert(Library._buttonElements, { button = btn })
+                
                 return btn
             end
             
@@ -1974,7 +2040,7 @@ function Library:CreateWindow(options)
                 
                 local Input = { Value = default, Type = "Input" }
                 
-                Create("TextLabel", {
+                local inputLabel = Create("TextLabel", {
                     BackgroundTransparency = 1,
                     Size = UDim2.new(1, 0, 0, 18),
                     Font = Enum.Font.Gotham,
@@ -2007,6 +2073,12 @@ function Library:CreateWindow(options)
                     TextXAlignment = Enum.TextXAlignment.Left,
                     ClearTextOnFocus = false,
                     Parent = inputContainer
+                })
+                
+                table.insert(Library._inputElements, {
+                    container = inputContainer,
+                    textbox = inputBox,
+                    label = inputLabel
                 })
                 
                 -- Focus effect
