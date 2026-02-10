@@ -1,12 +1,3 @@
---[[
-    Modern UI Library - Combined Test Script
-    Fixed: Dragging, Slider, Tabs expand, Dropdown styling
-]]
-
---============================================
--- LIBRARY START
---============================================
-
 local cloneref = cloneref or function(instance) return instance end
 
 local CoreGui = cloneref(game:GetService("CoreGui"))
@@ -17,7 +8,7 @@ local function destroyOldUI()
         if not parent then return end
         for _, child in pairs(parent:GetChildren()) do
             if child:IsA("ScreenGui") then
-                if child:GetAttribute("ModernUILib") or child.Name:match("^Hbo%d+$") then
+                if child:GetAttribute("DyneLib") or child.Name:match("^Dyne%d+$") then
                     pcall(function() child:Destroy() end)
                 end
             end
@@ -93,7 +84,7 @@ end
 
 -- ScreenGui Setup
 local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "Hbo" .. tostring(math.random(100000, 999999))
+ScreenGui.Name = "Dyne" .. tostring(math.random(100000, 999999))
 ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Global
 ScreenGui.ResetOnSpawn = false
 ScreenGui.DisplayOrder = 999
@@ -102,19 +93,19 @@ pcall(function()
     if syn and syn.protect_gui then syn.protect_gui(ScreenGui) end
 end)
 
-ScreenGui:SetAttribute("ModernUILib", true)
+ScreenGui:SetAttribute("DyneLib", true)
 ScreenGui.Parent = (gethui and gethui()) or CoreGui
 
 -- Theme Colors
 local Theme = {
-    Background = Color3.fromRGB(17, 19, 23),
-    Secondary = Color3.fromRGB(24, 27, 31),
-    Tertiary = Color3.fromRGB(32, 36, 42),
-    Accent = Color3.fromRGB(170, 235, 95),
-    AccentDark = Color3.fromRGB(130, 195, 65),
+    Background = Color3.fromRGB(8, 8, 8),
+    Secondary = Color3.fromRGB(15, 15, 15),
+    Tertiary = Color3.fromRGB(22, 22, 22),
+    Accent = Color3.fromRGB(120, 255, 80),
+    AccentDark = Color3.fromRGB(90, 200, 60),
     Text = Color3.fromRGB(255, 255, 255),
-    TextDark = Color3.fromRGB(140, 145, 155),
-    Border = Color3.fromRGB(45, 50, 58),
+    TextDark = Color3.fromRGB(130, 130, 130),
+    Border = Color3.fromRGB(35, 35, 35),
     Warning = Color3.fromRGB(230, 180, 50),
     Error = Color3.fromRGB(220, 80, 80),
 }
@@ -525,7 +516,7 @@ Library.Watermark = Watermark
 
 function Library:CreateWindow(options)
     options = options or {}
-    local title = options.Title or "Modern UI"
+    local title = options.Title or "Dyne"
     local size = options.Size or UDim2.new(0, 780, 0, 550)
     
     local Window = {
@@ -1217,28 +1208,29 @@ function Library:CreateWindow(options)
                     
                     -- Color picker popup
                     local pickerFrame = Create("Frame", {
-                        BackgroundColor3 = Theme.Secondary,
+                        BackgroundColor3 = Theme.Background,
                         Position = UDim2.fromOffset(0, 0),
                         Size = UDim2.new(0, 220, 0, 260),
                         Visible = false,
                         ZIndex = 100,
                         Active = true,
                         ClipsDescendants = true,
+                        BorderSizePixel = 0,
                         Parent = ScreenGui
                     })
                     AddCorner(pickerFrame, 10)
-                    AddStroke(pickerFrame, Theme.Border, 1)
+                    RegisterThemed(pickerFrame, "BackgroundColor3", "Background")
                     
-                    -- Accent bar (top)
                     local accentBar = Create("Frame", {
                         BackgroundColor3 = Theme.Accent,
                         Size = UDim2.new(1, 0, 0, 3),
                         ZIndex = 101,
+                        BorderSizePixel = 0,
                         Parent = pickerFrame
                     })
+                    RegisterThemed(accentBar, "BackgroundColor3", "Accent")
                     
-                    -- Title
-                    Create("TextLabel", {
+                    local pickerTitle = Create("TextLabel", {
                         BackgroundTransparency = 1,
                         Position = UDim2.new(0, 12, 0, 10),
                         Size = UDim2.new(1, -24, 0, 20),
@@ -1250,6 +1242,7 @@ function Library:CreateWindow(options)
                         ZIndex = 101,
                         Parent = pickerFrame
                     })
+                    RegisterThemed(pickerTitle, "TextColor3", "Text")
                     
                     -- Saturation/Value map
                     local satVibMap = Create("Frame", {
