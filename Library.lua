@@ -1,11 +1,4 @@
---[[
-    Modern UI Library - Combined Test Script
-    Fixed: Dragging, Slider, Tabs expand, Dropdown styling
-]]
 
---============================================
--- LIBRARY START
---============================================
 
 local cloneref = cloneref or function(instance) return instance end
 
@@ -219,6 +212,7 @@ local Library = {
     PickerActive = false,
     Toggles = Toggles,
     Options = Options,
+    ToggleKey = Enum.KeyCode.RightControl,
     _toggleElements = {},
     _tabElements = {},
     _buttonElements = {},
@@ -935,8 +929,134 @@ function Library:CreateWindow(options)
                     Parent = container
                 })
                 
-                local LabelObj = { Instance = label }
+                local LabelObj = { Instance = label, Type = "Label" }
                 function LabelObj:SetText(newText) label.Text = newText end
+                
+                -- AddKeyPicker for Labels (Linoria-style)
+                function LabelObj:AddKeyPicker(kpIdx, kpOptions)
+                    kpOptions = kpOptions or {}
+                    local kpDefault = kpOptions.Default or "None"
+                    local kpText = kpOptions.Text or "Keybind"
+                    local kpMode = kpOptions.Mode or "Toggle"
+                    local kpCallback = kpOptions.Callback or function() end
+                    local kpChangedCallback = kpOptions.ChangedCallback or function() end
+                    local kpNoUI = kpOptions.NoUI or false
+                    local kpSyncToggleState = kpOptions.SyncToggleState or false
+                    
+                    local KeyPicker = {
+                        Value = kpDefault,
+                        Mode = kpMode,
+                        Toggled = false,
+                        Type = "KeyPicker"
+                    }
+                    
+                    local function getKeyCode(keyName)
+                        if keyName == "None" or keyName == nil then return nil end
+                        local success, keyCode = pcall(function() return Enum.KeyCode[keyName] end)
+                        return success and keyCode or nil
+                    end
+                    
+                    local function getKeyName(keyCode)
+                        if not keyCode then return "None" end
+                        local name = keyCode.Name
+                        if name == "RightControl" then return "RCtrl" end
+                        if name == "LeftControl" then return "LCtrl" end
+                        if name == "RightShift" then return "RShift" end
+                        if name == "LeftShift" then return "LShift" end
+                        if name == "RightAlt" then return "RAlt" end
+                        if name == "LeftAlt" then return "LAlt" end
+                        return name
+                    end
+                    
+                    -- Create key picker button (right side of label)
+                    local keyBtn = Create("TextButton", {
+                        BackgroundColor3 = Theme.Tertiary,
+                        AnchorPoint = Vector2.new(1, 0.5),
+                        Position = UDim2.new(1, 0, 0.5, 0),
+                        Size = UDim2.new(0, 50, 0, 18),
+                        Font = Enum.Font.GothamMedium,
+                        Text = kpDefault == "None" and "[None]" or "[" .. getKeyName(getKeyCode(kpDefault)) .. "]",
+                        TextColor3 = Theme.TextDark,
+                        TextSize = 11,
+                        AutoButtonColor = false,
+                        Visible = not kpNoUI,
+                        Parent = label
+                    })
+                    AddCorner(keyBtn, 4)
+                    
+                    local listening = false
+                    
+                    keyBtn.MouseButton1Click:Connect(function()
+                        listening = true
+                        keyBtn.Text = "[...]"
+                        keyBtn.TextColor3 = Theme.Accent
+                    end)
+                    
+                    UserInputService.InputBegan:Connect(function(input, processed)
+                        if processed then return end
+                        
+                        -- Handle keybind listening
+                        if listening and input.UserInputType == Enum.UserInputType.Keyboard then
+                            listening = false
+                            if input.KeyCode == Enum.KeyCode.Escape then
+                                KeyPicker.Value = "None"
+                                keyBtn.Text = "[None]"
+                            else
+                                KeyPicker.Value = input.KeyCode.Name
+                                keyBtn.Text = "[" .. getKeyName(input.KeyCode) .. "]"
+                            end
+                            keyBtn.TextColor3 = Theme.TextDark
+                            task.spawn(kpChangedCallback, KeyPicker.Value)
+                            return
+                        end
+                        
+                        -- Handle key press for activation
+                        if not listening and KeyPicker.Value ~= "None" then
+                            local keyCode = getKeyCode(KeyPicker.Value)
+                            if keyCode and input.KeyCode == keyCode then
+                                if KeyPicker.Mode == "Toggle" then
+                                    KeyPicker.Toggled = not KeyPicker.Toggled
+                                    task.spawn(kpCallback, KeyPicker.Toggled)
+                                elseif KeyPicker.Mode == "Hold" then
+                                    KeyPicker.Toggled = true
+                                    task.spawn(kpCallback, true)
+                                end
+                            end
+                        end
+                    end)
+                    
+                    UserInputService.InputEnded:Connect(function(input)
+                        if KeyPicker.Mode == "Hold" and KeyPicker.Value ~= "None" then
+                            local keyCode = getKeyCode(KeyPicker.Value)
+                            if keyCode and input.KeyCode == keyCode then
+                                KeyPicker.Toggled = false
+                                task.spawn(kpCallback, false)
+                            end
+                        end
+                    end)
+                    
+                    function KeyPicker:GetState()
+                        if KeyPicker.Mode == "Always" then return true end
+                        return KeyPicker.Toggled
+                    end
+                    
+                    function KeyPicker:SetValue(data)
+                        if type(data) == "table" then
+                            KeyPicker.Value = data[1] or "None"
+                            KeyPicker.Mode = data[2] or KeyPicker.Mode
+                        else
+                            KeyPicker.Value = data or "None"
+                        end
+                        keyBtn.Text = KeyPicker.Value == "None" and "[None]" or "[" .. getKeyName(getKeyCode(KeyPicker.Value)) .. "]"
+                    end
+                    
+                    function KeyPicker:OnClick(cb) kpCallback = cb end
+                    function KeyPicker:OnChanged(cb) kpChangedCallback = cb end
+                    
+                    Options[kpIdx] = KeyPicker
+                    return KeyPicker
+                end
+                
                 return LabelObj
             end
             
@@ -2123,6 +2243,115 @@ function Library:CreateWindow(options)
                 return Input
             end
             
+            function Groupbox:AddKeybind(idx, keybindOptions)
+                keybindOptions = keybindOptions or {}
+                local text = keybindOptions.Text or "Keybind"
+                local default = keybindOptions.Default or "RightControl"
+                local callback = keybindOptions.Callback or function() end
+                local changesToggleKey = keybindOptions.ChangesToggleKey or false
+                
+                -- Convert string to KeyCode
+                local function getKeyCode(keyName)
+                    local success, keyCode = pcall(function()
+                        return Enum.KeyCode[keyName]
+                    end)
+                    return success and keyCode or Enum.KeyCode.RightControl
+                end
+                
+                local function getKeyName(keyCode)
+                    if not keyCode then return "None" end
+                    local name = keyCode.Name
+                    -- Shorten common names
+                    if name == "RightControl" then return "RCtrl" end
+                    if name == "LeftControl" then return "LCtrl" end
+                    if name == "RightShift" then return "RShift" end
+                    if name == "LeftShift" then return "LShift" end
+                    if name == "RightAlt" then return "RAlt" end
+                    if name == "LeftAlt" then return "LAlt" end
+                    return name
+                end
+                
+                local Keybind = {
+                    Value = getKeyCode(default),
+                    Type = "Keybind"
+                }
+                
+                local keybindRow = Create("Frame", {
+                    BackgroundTransparency = 1,
+                    Size = UDim2.new(1, 0, 0, 32),
+                    Parent = container
+                })
+                
+                Create("TextLabel", {
+                    BackgroundTransparency = 1,
+                    Size = UDim2.new(0.6, 0, 1, 0),
+                    Font = Enum.Font.Gotham,
+                    Text = text,
+                    TextColor3 = Theme.TextDark,
+                    TextSize = 13,
+                    TextXAlignment = Enum.TextXAlignment.Left,
+                    Parent = keybindRow
+                })
+                
+                local keyBtn = Create("TextButton", {
+                    BackgroundColor3 = Theme.Tertiary,
+                    AnchorPoint = Vector2.new(1, 0.5),
+                    Position = UDim2.new(1, 0, 0.5, 0),
+                    Size = UDim2.new(0, 80, 0, 28),
+                    Font = Enum.Font.GothamMedium,
+                    Text = getKeyName(Keybind.Value),
+                    TextColor3 = Theme.Text,
+                    TextSize = 12,
+                    AutoButtonColor = false,
+                    Parent = keybindRow
+                })
+                AddCorner(keyBtn, 4)
+                AddStroke(keyBtn, Theme.Border, 1)
+                
+                local listening = false
+                
+                keyBtn.MouseButton1Click:Connect(function()
+                    listening = true
+                    keyBtn.Text = "..."
+                    Tween(keyBtn, {BackgroundColor3 = Theme.Accent}, 0.15)
+                end)
+                
+                UserInputService.InputBegan:Connect(function(input, processed)
+                    if not listening then return end
+                    if input.UserInputType == Enum.UserInputType.Keyboard then
+                        listening = false
+                        Keybind.Value = input.KeyCode
+                        keyBtn.Text = getKeyName(input.KeyCode)
+                        Tween(keyBtn, {BackgroundColor3 = Theme.Tertiary}, 0.15)
+                        
+                        if changesToggleKey then
+                            Library:SetToggleKey(input.KeyCode)
+                        end
+                        
+                        task.spawn(callback, input.KeyCode)
+                        if Keybind.Changed then Keybind.Changed(input.KeyCode) end
+                    end
+                end)
+                
+                function Keybind:SetValue(keyName)
+                    Keybind.Value = getKeyCode(keyName)
+                    keyBtn.Text = getKeyName(Keybind.Value)
+                    if changesToggleKey then
+                        Library:SetToggleKey(Keybind.Value)
+                    end
+                end
+                
+                function Keybind:OnChanged(cb) Keybind.Changed = cb end
+                
+                -- Set initial toggle key if specified
+                if changesToggleKey then
+                    Library:SetToggleKey(Keybind.Value)
+                end
+                
+                Options[idx] = Keybind
+                return Keybind
+            end
+            
             Tab.Groupboxes[name] = Groupbox
             return Groupbox
         end
@@ -2150,8 +2379,30 @@ function Library:CreateWindow(options)
         MainWindow.Visible = state
     end
     
+    function Library:SetToggleKey(key)
+        if type(key) == "string" then
+            key = Enum.KeyCode[key]
+        end
+        if key then
+            Library.ToggleKey = key
+        end
+    end
+    
     UserInputService.InputBegan:Connect(function(input, processed)
-        if not processed and input.KeyCode == Enum.KeyCode.RightControl then
+        if processed then return end
+        
+        -- Support Library.ToggleKeybind (KeyPicker object) like Linoria
+        if typeof(Library.ToggleKeybind) == "table" and Library.ToggleKeybind.Type == "KeyPicker" then
+            local keyPickerValue = Library.ToggleKeybind.Value
+            if keyPickerValue and keyPickerValue ~= "None" then
+                local keyName = input.KeyCode and input.KeyCode.Name
+                if keyName == keyPickerValue then
+                    Library:Toggle()
+                    return
+                end
+            end
+        -- Fallback to Library.ToggleKey (direct KeyCode)
+        elseif input.KeyCode == Library.ToggleKey then
             Library:Toggle()
         end
     end)
