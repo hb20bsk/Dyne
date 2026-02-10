@@ -1,3 +1,11 @@
+--[[
+    Modern UI Library - Combined Test Script
+    Fixed: Dragging, Slider, Tabs expand, Dropdown styling
+]]
+
+--============================================
+-- LIBRARY START
+--============================================
 
 local cloneref = cloneref or function(instance) return instance end
 
