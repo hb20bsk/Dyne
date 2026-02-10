@@ -1,11 +1,4 @@
---[[
-    Modern UI Library - Combined Test Script
-    Fixed: Dragging, Slider, Tabs expand, Dropdown styling
-]]
 
---============================================
--- LIBRARY START
---============================================
 
 local cloneref = cloneref or function(instance) return instance end
 
@@ -20,34 +13,26 @@ local HttpService = cloneref(game:GetService("HttpService"))
 local LocalPlayer = Players.LocalPlayer
 local Mouse = LocalPlayer:GetMouse()
 
--- Lucide Icons (rbxassetid format)
-local Icons = {
-    ["crosshair"] = "rbxassetid://10709818534",
-    ["user"] = "rbxassetid://10747373176",
-    ["swords"] = "rbxassetid://10734975692",
-    ["folder"] = "rbxassetid://10723387563",
-    ["settings"] = "rbxassetid://10734950309",
-    ["globe"] = "rbxassetid://10723404337",
-    ["home"] = "rbxassetid://10723423626",
-    ["target"] = "rbxassetid://10734977758",
-    ["zap"] = "rbxassetid://10747385618",
-    ["shield"] = "rbxassetid://10734947426",
-    ["eye"] = "rbxassetid://10723377420",
-    ["star"] = "rbxassetid://10734965765",
-    ["heart"] = "rbxassetid://10723415700",
-    ["check"] = "rbxassetid://10709803797",
-    ["x"] = "rbxassetid://10747383498",
-    ["info"] = "rbxassetid://10723430653",
-    ["alert-circle"] = "rbxassetid://10709752996",
-    ["alert-triangle"] = "rbxassetid://10709753149",
-    ["bell"] = "rbxassetid://10709775704",
-    ["search"] = "rbxassetid://10734940491",
-    ["chevron-down"] = "rbxassetid://10709807482",
-    ["chevron-up"] = "rbxassetid://10709808756",
-}
+-- Load Lucide Icons from dawid's GitHub repository
+local Icons = {}
+local success, iconsModule = pcall(function()
+    return loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/UI-Libs/main/Icons.lua"))()
+end)
+
+if success and iconsModule and iconsModule.assets then
+    Icons = iconsModule.assets
+end
 
 local function GetIcon(name)
-    return Icons[name]
+    if not name then return nil end
+    -- Try exact match first
+    if Icons[name] then return Icons[name] end
+    -- Try with lucide- prefix
+    if Icons["lucide-" .. name] then return Icons["lucide-" .. name] end
+    -- Try without lucide- prefix
+    local withoutPrefix = name:gsub("^lucide%-", "")
+    if Icons[withoutPrefix] then return Icons[withoutPrefix] end
+    return nil
 end
 
 -- ScreenGui Setup
