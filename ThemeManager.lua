@@ -116,6 +116,69 @@ local ThemeManager = {} do
             TextDark = "a0a0b0", 
             Border = "44475a" 
         }},
+        ['Blood'] = { 9, { 
+            Background = "0a0a0a", 
+            Secondary = "121212", 
+            Tertiary = "1a1a1a", 
+            Accent = "e62020", 
+            Text = "ffffff", 
+            TextDark = "999999", 
+            Border = "2a1515" 
+        }},
+        ['Obsidian'] = { 10, { 
+            Background = "080808", 
+            Secondary = "0e0e0e", 
+            Tertiary = "151515", 
+            Accent = "ff4444", 
+            Text = "e0e0e0", 
+            TextDark = "808080", 
+            Border = "1f1f1f" 
+        }},
+        ['Rose'] = { 11, { 
+            Background = "1a1015", 
+            Secondary = "221820", 
+            Tertiary = "2a2028", 
+            Accent = "ff6b9d", 
+            Text = "ffffff", 
+            TextDark = "a088a0", 
+            Border = "3a2835" 
+        }},
+        ['Aqua'] = { 12, { 
+            Background = "0a1414", 
+            Secondary = "0f1c1c", 
+            Tertiary = "142424", 
+            Accent = "00ffcc", 
+            Text = "ffffff", 
+            TextDark = "80b0b0", 
+            Border = "1a3a3a" 
+        }},
+        ['Gold'] = { 13, { 
+            Background = "14120a", 
+            Secondary = "1c190f", 
+            Tertiary = "242014", 
+            Accent = "ffc800", 
+            Text = "ffffff", 
+            TextDark = "b0a080", 
+            Border = "3a3520" 
+        }},
+        ['Neon'] = { 14, { 
+            Background = "050510", 
+            Secondary = "0a0a18", 
+            Tertiary = "101020", 
+            Accent = "00ff88", 
+            Text = "ffffff", 
+            TextDark = "7090ff", 
+            Border = "1a1a40" 
+        }},
+        ['Amoled'] = { 15, { 
+            Background = "000000", 
+            Secondary = "080808", 
+            Tertiary = "101010", 
+            Accent = "ffffff", 
+            Text = "ffffff", 
+            TextDark = "808080", 
+            Border = "202020" 
+        }},
     }
 
     function ThemeManager:SetLibrary(library)
@@ -323,10 +386,12 @@ local ThemeManager = {} do
         groupbox:AddButton({
             Text = 'Set as default',
             Func = function()
-                self:SaveDefault(self.Library.Options.ThemeManager_ThemeList.Value)
+                local theme = self.Library.Options.ThemeManager_ThemeList.Value
+                self:SaveDefault(theme)
+                self:ApplyTheme(theme)
                 self.Library:Notify({
                     Title = "Success",
-                    Description = string.format('Set default theme to %q', self.Library.Options.ThemeManager_ThemeList.Value),
+                    Description = string.format('Set default theme to %q', theme),
                     Duration = 3,
                     Type = "success"
                 })
